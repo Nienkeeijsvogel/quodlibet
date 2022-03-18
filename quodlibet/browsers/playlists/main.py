@@ -5,10 +5,10 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-
+from natsort import os_sort_key
 import os
 from typing import Optional, Tuple
-
+from natsort import os_sort_key
 from gi.repository import Gtk, GLib, Pango, Gdk
 
 import quodlibet
@@ -56,9 +56,10 @@ class PlaylistsBrowser(Browser, DisplayPatternMixin):
     _DEFAULT_PATTERN_TEXT = DEFAULT_PATTERN_TEXT
 
     def __init__(self, songs_lib: SongFileLibrary, Confirmer=ConfirmationPrompt):
+
         super().__init__(spacing=6)
         self._lists = ObjectModelSort(model=ObjectStore())
-        self._lists.set_default_sort_func(ObjectStore._sort_on_value)
+        self._lists.set_default_sort_func(ObjectStore._compare)
 
         self.songs_lib = songs_lib
         try:

@@ -7,7 +7,7 @@
 # (at your option) any later version.
 
 from gi.repository import Gtk, GObject
-
+from natsort import os_sort_key
 from quodlibet.util import cmp
 
 
@@ -174,6 +174,19 @@ class ObjectStore(_ModelMixin, Gtk.ListStore):
         """Sorts two items in an ObjectStore,
         suitable for passing to `set_default_sort_func`"""
         return cmp(m[a][0], m[b][0])
+
+    @staticmethod
+    def _compare(m, a, b, _):
+
+        # Do not sort the top level directories
+        a_path = m.get_path(a)
+        if a_path is not None and a_path.get_depth() == 1:
+            return 0
+
+        # Otherwise, files are sorted by their paths
+        a_key = os_sort_key(m.get_value(a, 0))
+        b_key = os_sort_key(m.get_value(b, 0))
+        return 1 if a_key > b_key else -1
 
     def __init__(self, *args):
         if len(args) > 1:

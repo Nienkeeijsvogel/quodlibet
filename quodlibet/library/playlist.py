@@ -7,7 +7,7 @@ import os
 import re
 from typing import Iterable, Generator, Optional
 
-import quodlibet
+import quodlibet/Users/nienkeeijsvogel/Documents/GitHub/quodlibet/quodlibet/library/playlist.py
 from quodlibet import print_d, print_w
 from quodlibet.formats import AudioFile
 from quodlibet.library.base import Library

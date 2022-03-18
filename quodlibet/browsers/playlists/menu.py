@@ -27,7 +27,7 @@ class PlaylistMenu(Gtk.Menu):
         self.append(SeparatorMenuItem())
         self.set_size_request(int(i.size_request().width * 2), -1)
 
-        for playlist in sorted(pl_lib):
+        for playlist in sorted(pl_lib, reverse=True):
             name = playlist.name
             i = Gtk.CheckMenuItem(label=name)
             some, all = playlist.has_songs(songs)
