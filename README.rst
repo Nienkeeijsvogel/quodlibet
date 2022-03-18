@@ -33,7 +33,7 @@ or `write your own <https://quodlibet.readthedocs.io/en/latest/development/plugi
     :align: center
 
 
-Ex Falso: just the tag editor
+Ex Falso: just the tag edito
 -----------------------------
 
 Ex Falso is a bare-bones tag editor with the same editing interface as Quod Libet.

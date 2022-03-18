@@ -43,10 +43,13 @@ class PlaylistLibrary(Library[str, Playlist]):
         self._rsig = library.connect('removed', self.__songs_removed)
         self._csig = library.connect('changed', self.__songs_changed)
 
+
     def _read_playlists(self, library) -> None:
+        convert = lambda text: int(text) if text.isdigit() else text.lower()
+        alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
         print_d(f"Reading playlist directory {self.pl_dir} (library: {library})")
         try:
-            fns = os.listdir(self.pl_dir)
+            fns = sorted(os.listdir(self.pl_dir), key=alphanum_key)
         except FileNotFoundError as e:
             print_w(f"No playlist dir found in {self.pl_dir!r}, creating. ({e})")
             os.mkdir(self.pl_dir)

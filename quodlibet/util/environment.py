@@ -14,7 +14,6 @@ import sys
 import ctypes
 import configparser
 import fnmatch
-
 from gi.repository import GLib, Gio
 
 
