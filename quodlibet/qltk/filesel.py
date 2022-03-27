@@ -8,6 +8,8 @@
 import os
 import errno
 from urllib.parse import urlsplit
+from re import split
+from functools import total_ordering
 
 from gi.repository import Gtk, GObject, Gdk, Gio, Pango
 from senf import uri2fsn, fsnative, fsn2text, bytes2fsn
@@ -55,7 +57,6 @@ def filesel_filter(filename):
 
 def _get_win_favorites():
     """Returns a list of paths for commonly used directories.
-
     e.g. My Music, Desktop etc.
     """
 
@@ -104,7 +105,6 @@ def _get_win_favorites():
 
 def get_favorites():
     """A list of paths of commonly used folders (Desktop,..)
-
     Paths don't have to exist.
     """
 
@@ -161,7 +161,6 @@ def parse_gtk_bookmarks(data):
 def get_gtk_bookmarks():
     """A list of paths from the GTK+ bookmarks.
     The paths don't have to exist.
-
     Returns:
         List[fsnative]
     """
@@ -191,6 +190,50 @@ class DirectoryTree(RCMHintedTreeView, MultiDragTreeView):
         """
 
         model = ObjectTreeStore()
+
+        def compare(m: Gtk.TreeModel, a: Gtk.TreeIter, b: Gtk.TreeIter, _):
+
+            # Do not sort the top level directories
+            a_path = m.get_path(a)
+            if a_path is not None and a_path.get_depth() == 1:
+                return 0
+
+            @total_ordering
+            class KeyElem:
+                def __init__(self, v):
+                    self.v = v
+
+                @classmethod
+                def parse(cls, v: str):
+                    return cls(int(v) if v.isnumeric() else v.lower())
+
+                def __eq__(self, other):
+                    return self.v == other.v
+
+                def __le__(self, other):
+                    # If both keys are the same type (int or string), compare normally
+                    if isinstance(other.v, type(self.v)):
+                        return self.v <= other.v
+
+                    # Otherwise, ints come first
+                    return isinstance(self.v, int)
+
+            def string_to_key(s):
+                # Break up the string into parsed components
+                k = [KeyElem.parse(v) for v in split(r"(\d+)", s)]
+
+                # Add the original string to the end, to preserve case information
+                # (When using lexicographical comparison, this acts as a fallback)
+                k.append(KeyElem(s))
+                return k
+
+            # Otherwise, files are sorted by their paths
+            a_key = string_to_key(m.get_value(a, 0))
+            b_key = string_to_key(m.get_value(b, 0))
+            return 1 if a_key > b_key else -1
+
+        model.set_sort_func(0, compare)
+        model.set_sort_column_id(0, Gtk.SortType.ASCENDING)
         super().__init__(model=model)
 
         if initial is not None:
@@ -558,8 +601,9 @@ class FileSelector(Paned):
         def select_all_files(view, path, col, fileselection):
             view.expand_row(path, False)
             fileselection.select_all()
+
         dirlist.connect('row-activated', select_all_files,
-            filelist.get_selection())
+                        filelist.get_selection())
 
         sw = ScrolledWindow()
         sw.add(dirlist)
@@ -616,7 +660,7 @@ class FileSelector(Paned):
                 for file_ in sorted(files):
                     filename = os.path.join(dir_, file_)
                     if (os.access(filename, os.R_OK) and
-                            not os.path.isdir(filename)):
+                        not os.path.isdir(filename)):
                         fmodel.append([filename])
             except OSError:
                 pass
@@ -637,7 +681,6 @@ class FileSelector(Paned):
 
 
 def _get_main_folders():
-
     def filter_exists(paths):
         return [p for p in paths if os.path.isdir(p)]
 
@@ -664,7 +707,6 @@ def _get_main_folders():
 
 class MainFileSelector(FileSelector):
     """The main file selector used in EF.
-
     Shows a useful list of directories in the directory tree.
     """
 
@@ -676,7 +718,6 @@ class MainFileSelector(FileSelector):
 
 class MainDirectoryTree(DirectoryTree):
     """The main directory tree used in QL.
-
     Shows a useful list of directories.
     """
 
